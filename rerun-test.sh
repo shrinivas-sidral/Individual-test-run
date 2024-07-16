@@ -38,24 +38,33 @@ run_test_case()
     mkdir -p "$FILE_PATH$LOG_DIR"
 
     #read test cases from file
-    while IFS= read -r TEST_CASE
-    do
+    while IFS= read -r TEST_CASE; do
+        ceph_status=$(oc get cephcluster | grep -Eo "HEALTH_OK")
+        storage_status=$(oc get storagecluster | grep -Eo "Ready")
 
-        str1=$(echo "$TEST_CASE" | awk -F "/" '{print $2}')
+        if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
+            str1=$(echo "$TEST_CASE" | awk -F "/" '{print $2}')
 
-        if [[ $str1 == "ui" ]]
-        then
-            echo "Following failure is UI related and ignored"
-            continue
+            if [[ $str1 == "ui" ]]
+            then
+                echo "Following failure is UI related and ignored"
+                continue
+            else
+                
+                LOG_FILE_NAME=$(awk -F '::' '{print $3}'<<<"$TEST_CASE")
+                #change directory
+                cd ~/ocs-upi-kvm/src/ocs-ci/
+                #run test cases
+                nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee ~/ocs-upi-kvm/scripts/rerun-logs/"$LOG_FILE_NAME".log 2>&1
+            fi
         else
-             
-            LOG_FILE_NAME=$(awk -F '::' '{print $3}'<<<"$TEST_CASE")
-            #change directory
-            cd ~/ocs-upi-kvm/src/ocs-ci/
-            #run test cases
-            nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee ~/ocs-upi-kvm/scripts/rerun-logs/"$LOG_FILE_NAME".log 2>&1
+            echo "Current ceph health status : $ceph_status."
+            echo "Current storage cluter phase: $storage_status."
+            echo "Sleep 5 sec"
+            sleep 5
+            
         fi
-     done < <(cat < "$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
+    done < <(cat < "$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
 }
 
 #funtion for - test summary 
@@ -91,7 +100,6 @@ test_summary(){
         echo "$LOG_DIR does not exist."
     fi
 }
-
 
 #check file exits or not
 if [ ! -f "$FILENAME" ]; then
@@ -141,3 +149,16 @@ case $answer in
    echo "Invalid option..!"
    ;;
 esac
+
+
+        
+
+
+
+
+
+
+
+
+
+
