@@ -1,6 +1,6 @@
 # Individual Test Run
 
-Before running, change the required fields in the `rerun.config` file.
+Before running `rerun-test.sh`, change the required fields in the `rerun.config` file.
 
 ## Contents of `rerun.config` File to Change:
 
