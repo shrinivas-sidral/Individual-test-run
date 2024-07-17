@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # export all the required varibles
-source ~/ocs-upi-kvm/scripts/rerun.config
+source ~/ocs-upi-kvm/scripts/Individual-test-run/rerun.config
 
 #funtion for - fetch data before executing the test cases
 fetch_data(){
@@ -12,7 +12,8 @@ fetch_data(){
     if ! $UI_TEST ; then
 
         str=$(echo "$T" | awk -F "/" '{print $2}')
-        if [[ $str == "ui" ]]
+	str1=$(echo "$T" | awk -F "/" '{print $4}')
+	if [ $str == "ui" ] || [ $str1 == "ui" ]
         then
             echo $T | sed "s/$1/SKIPPED/" | tee -a $FILE_PATH$BEFORE_TEST
             ((SKIPPED++))
@@ -25,12 +26,15 @@ fetch_data(){
         echo "$T" | tee -a "$FILE_PATH$BEFORE_TEST"
         (("$1"++))
     fi
-    done < <(cat < "$FILENAME" | grep "^$1[[:space:]]\+" | sort | uniq)
+    done < <(cat < "$FILE_PATH$FILENAME" | grep "^$1[[:space:]]\+" | awk -F '::' '{print $NF " " $0}' | sort | awk '{print $2 " "  $3}' | uniq)
 }
 
 #funtion for - run the test cases
 run_test_case()
 {
+    #change the namespace
+    oc project openshift-storage
+
     # activate virtual env.
     source ~/venv/bin/activate
 
@@ -64,7 +68,7 @@ run_test_case()
             sleep 5
             
         fi
-    done < <(cat < "$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
+    done < <(cat < "$FILE_PATH$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
 }
 
 #funtion for - test summary 
@@ -102,13 +106,13 @@ test_summary(){
 }
 
 #check file exits or not
-if [ ! -f "$FILENAME" ]; then
-    echo "$FILENAME file not exists"
+if [ ! -f "$FILE_PATH$FILENAME" ]; then
+    echo "$FILE_PATH$FILENAME file not exists"
     exit 1
 
 # collect the data before executing test cases
 else
-    echo "===============================Failed test cases from log file $FILENAME============================" | tee "$FILE_PATH$BEFORE_TEST"
+    echo "===============================Failed test cases from log file $FILE_PATH$FILENAME============================" | tee "$FILE_PATH$BEFORE_TEST"
     fld=FAILED
     err=ERROR
     
