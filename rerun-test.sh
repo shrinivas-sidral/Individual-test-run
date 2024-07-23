@@ -77,7 +77,7 @@ test_summary() {
     >$FILE_PATH$OVERALL_TEST_SUMMARY
         echo "=========================== short test summary info ============================" | tee "$FILE_PATH$INDIVIDUAL_TEST_SUMMARY"
 
-        line_number=$(grep -n "short test summary info" test-tier1.log | cut -d: -f1 | head -n 1)
+        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
                 if [ -n "$line_number" ]; then
                     total_lines=$(wc --l <"$FILE_PATH$FILENAME")
                     while IFS= read -r LINE; do
