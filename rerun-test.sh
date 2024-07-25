@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # export all the required varibles
-source $RERUN_CONFIG
+source ~/ocs-upi-kvm/scripts/individual-test-run/rerun.config
 
 #funtion for - fetch data before executing the test cases
 fetch_data(){
@@ -59,11 +59,12 @@ run_test_case()
                 #change directory
                 cd ~/ocs-upi-kvm/src/ocs-ci/
                 #run test cases
-                nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee $LOG_DIR"$LOG_FILE_NAME".log 2>&1
+                nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee "$LOG_DIR$LOG_FILE_NAME.log" 2>&1
             fi
         else
             if [ "$ceph_status" != "HEALTH_OK" ]; then
                 echo "ceph health is not HEALTH_OK"
+                #execute ceph health script
                 bash $CEPH_HEALTH_SCRIPT
             fi
             if [ "$storage_status" != "Ready" ]; then
