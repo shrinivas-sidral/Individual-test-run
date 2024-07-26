@@ -47,9 +47,9 @@ run_test_case()
         storage_status=$(oc get storagecluster | grep -Eo "Ready")
 
         if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
-            str1=$(echo "$TEST_CASE" | awk -F "/" '{print $2}')
-
-            if [[ $str1 == "ui" ]]
+            str=$(echo "$TEST_CASE" | awk -F "/" '{print $2}')
+	        str1=$(echo "$TEST_CASE" | awk -F "/" '{print $4}')
+	        if [ $str == "ui" ] || [ $str1 == "ui" ]
             then
                 echo "Following failure is UI related and ignored"
                 continue
@@ -66,9 +66,13 @@ run_test_case()
                 echo "ceph health is not HEALTH_OK"
                 #execute ceph health script
                 bash $CEPH_HEALTH_SCRIPT
+                echo "sleep 5m"
+                sleep 5m
             fi
             if [ "$storage_status" != "Ready" ]; then
                 echo "storage cluster is not Ready."
+                 echo "sleep 5m"
+                 sleep 5m
             fi
         fi
     done < <(cat < "$FILE_PATH$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
