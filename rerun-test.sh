@@ -129,6 +129,16 @@ if [ ! -f "$FILE_PATH$FILENAME" ]; then
 
 # collect the data before executing test cases
 else
+   >$OVERALL_TEST_SUMMARY
+        echo "=========================== short test summary info ============================" | tee "$INDIVIDUAL_TEST_SUMMARY"
+
+        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
+                if [ -n "$line_number" ]; then
+                    total_lines=$(wc --l <"$FILE_PATH$FILENAME")
+                    while IFS= read -r LINE; do
+                       echo $LINE >> "$OVERALL_TEST_SUMMARY"
+                    done < <(tail -n +$((line_number + 1)) $FILE_PATH$FILENAME | head -n $(($total_lines - $line_number - 4)))
+                fi
     echo "===============================Failed test cases from log file $FILE_PATH$FILENAME============================" | tee "$BEFORE_TEST"
     fld=FAILED
     err=ERROR
@@ -143,17 +153,6 @@ else
 
     echo "============================$FAILED Failed, $ERROR Errors, $SKIPPED skipped=========================" | tee -a  "$BEFORE_TEST"
 fi
-
-   >$OVERALL_TEST_SUMMARY
-        echo "=========================== short test summary info ============================" | tee "$INDIVIDUAL_TEST_SUMMARY"
-
-        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
-                if [ -n "$line_number" ]; then
-                    total_lines=$(wc --l <"$FILE_PATH$FILENAME")
-                    while IFS= read -r LINE; do
-                       echo $LINE >> "$OVERALL_TEST_SUMMARY"
-                    done < <(tail -n +$((line_number + 1)) $FILE_PATH$FILENAME | head -n $(($total_lines - $line_number - 4)))
-                fi
 
     fld=FAILED
     err=ERROR
