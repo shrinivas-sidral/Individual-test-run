@@ -56,6 +56,13 @@ run_test_case()
                 if [ $? -eq 0 ]; then
                     echo "Following failure is UI related and ignored"
                     continue
+                else
+                #extract test name for log filename
+                LOG_FILE_NAME=$(awk -F '::' '{print $3}'<<<"$TEST_CASE")
+                #change directory
+                cd ~/ocs-upi-kvm/src/ocs-ci/
+                #run test cases
+                nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee "$LOG_DIR$LOG_FILE_NAME.log" 2>&1
                 fi
             else
                 #extract test name for log filename
