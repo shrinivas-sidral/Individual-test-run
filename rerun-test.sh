@@ -91,8 +91,8 @@ test_summary() {
                 fi
         
         # LOOP to fetch all log files in log dir
-        for logfile in "$LOG_DIR*.log"; do
-
+        for logfile in "$LOG_DIR"*.log; do
+        echo $logfile
             if [[ $(tail -n 2 $logfile | grep -o passed) == "passed" ]]; then
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
                 ptc=$(grep -i -F $keyword $logfile | tail -n 1)
