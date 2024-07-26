@@ -8,16 +8,6 @@ fetch_data(){
 
     while IFS= read -r T
     do
-    >$OVERALL_TEST_SUMMARY
-        echo "=========================== short test summary info ============================" | tee "$INDIVIDUAL_TEST_SUMMARY"
-
-        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
-                if [ -n "$line_number" ]; then
-                    total_lines=$(wc --l <"$FILE_PATH$FILENAME")
-                    while IFS= read -r LINE; do
-                       echo $LINE >> "$OVERALL_TEST_SUMMARY"
-                    done < <(tail -n +$((line_number + 1)) $FILE_PATH$FILENAME | head -n $(($total_lines - $line_number - 4)))
-                fi
     if ! $UI_TEST ; then
     str=$(echo "$T" | grep -Eo "/ui/")
 	if [ $? -eq 0 ]
@@ -91,12 +81,13 @@ test_summary() {
     if [ -d "$LOG_DIR" ]; then     
         # LOOP to fetch all log files in log dir
         for logfile in "$LOG_DIR"*.log; do
+           temp=$1
             if [[ $(tail -n 2 $logfile | grep -o passed) == "passed" ]]; then
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
                 ptc=$(grep -i -F $keyword $logfile | tail -n 1)
                 echo "PASSED $ptc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((PASS++))
-                sed -i "\|^$1 $ptc\$|d" $OVERALL_TEST_SUMMARY
+                sed -i "\|^$temp $ptc\$|d" $OVERALL_TEST_SUMMARY
             elif [[ $(tail -n 2 $logfile | grep -o failed) == "failed" ]]; then
                 tail -n 2 $logfile | grep -v -B 1 failed | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((FAIL++))
@@ -104,7 +95,7 @@ test_summary() {
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
                 stc=$(grep -i -F $keyword $logfile | tail -n 1)
                 echo "SKIPPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
-                sed -i "\|^$1 $stc\$|d" $OVERALL_TEST_SUMMARY
+                sed -i "\|^$temp $stc\$|d" $OVERALL_TEST_SUMMARY
                 ((SKIP++))
             fi
         done
@@ -152,6 +143,17 @@ else
 
     echo "============================$FAILED Failed, $ERROR Errors, $SKIPPED skipped=========================" | tee -a  "$BEFORE_TEST"
 fi
+
+   >$OVERALL_TEST_SUMMARY
+        echo "=========================== short test summary info ============================" | tee "$INDIVIDUAL_TEST_SUMMARY"
+
+        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
+                if [ -n "$line_number" ]; then
+                    total_lines=$(wc --l <"$FILE_PATH$FILENAME")
+                    while IFS= read -r LINE; do
+                       echo $LINE >> "$OVERALL_TEST_SUMMARY"
+                    done < <(tail -n +$((line_number + 1)) $FILE_PATH$FILENAME | head -n $(($total_lines - $line_number - 4)))
+                fi
 
     fld=FAILED
     err=ERROR
