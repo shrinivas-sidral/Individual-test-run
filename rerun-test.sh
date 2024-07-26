@@ -51,7 +51,7 @@ run_test_case()
         storage_status=$(oc get storagecluster | grep -Eo "Ready")
         if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
             #skip UI test
-            str=$(echo "$T" | grep -Eo "/ui/")
+            str=$(echo "$TEST_CASE" | grep -Eo "/ui/")
 	        if [ $? -eq 0 ]
             then
                 echo "Following failure is UI related and ignored"
