@@ -8,14 +8,24 @@ fetch_data(){
 
     while IFS= read -r T
     do
+    >$OVERALL_TEST_SUMMARY
+        echo "=========================== short test summary info ============================" | tee "$INDIVIDUAL_TEST_SUMMARY"
 
+        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
+                if [ -n "$line_number" ]; then
+                    total_lines=$(wc --l <"$FILE_PATH$FILENAME")
+                    while IFS= read -r LINE; do
+                       echo $LINE >> "$OVERALL_TEST_SUMMARY"
+                    done < <(tail -n +$((line_number + 1)) $FILE_PATH$FILENAME | head -n $(($total_lines - $line_number - 4)))
+                fi
     if ! $UI_TEST ; then
-
     str=$(echo "$T" | grep -Eo "/ui/")
 	if [ $? -eq 0 ]
         then
             echo $T | sed "s/$1/SKIPPED/" | tee -a $BEFORE_TEST
+            sed -i "\|$T\$|d" $OVERALL_TEST_SUMMARY
             ((SKIPPED++))
+
         else
             echo "$T" | tee -a "$BEFORE_TEST"
             (("$1"++))
@@ -78,18 +88,7 @@ run_test_case()
 
 #funtion for - test summary 
 test_summary() {
-    if [ -d "$LOG_DIR" ]; then
-    >$OVERALL_TEST_SUMMARY
-        echo "=========================== short test summary info ============================" | tee "$INDIVIDUAL_TEST_SUMMARY"
-
-        line_number=$(grep -n "short test summary info" $FILE_PATH$FILENAME | cut -d: -f1 | head -n 1)
-                if [ -n "$line_number" ]; then
-                    total_lines=$(wc --l <"$FILE_PATH$FILENAME")
-                    while IFS= read -r LINE; do
-                       echo $LINE >> "$OVERALL_TEST_SUMMARY"
-                    done < <(tail -n +$((line_number + 1)) $FILE_PATH$FILENAME | head -n $(($total_lines - $line_number - 4)))
-                fi
-        
+    if [ -d "$LOG_DIR" ]; then     
         # LOOP to fetch all log files in log dir
         for logfile in "$LOG_DIR"*.log; do
             if [[ $(tail -n 2 $logfile | grep -o passed) == "passed" ]]; then
@@ -97,14 +96,15 @@ test_summary() {
                 ptc=$(grep -i -F $keyword $logfile | tail -n 1)
                 echo "PASSED $ptc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((PASS++))
-                sed -i "\|^FAILED $ptc\$|d" $OVERALL_TEST_SUMMARY
+                sed -i "\|^$1 $ptc\$|d" $OVERALL_TEST_SUMMARY
             elif [[ $(tail -n 2 $logfile | grep -o failed) == "failed" ]]; then
                 tail -n 2 $logfile | grep -v -B 1 failed | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((FAIL++))
             else
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
                 stc=$(grep -i -F $keyword $logfile | tail -n 1)
-                echo "SKIPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
+                echo "SKIPPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
+                sed -i "\|^$1 $stc\$|d" $OVERALL_TEST_SUMMARY
                 ((SKIP++))
             fi
         done
@@ -161,8 +161,13 @@ fi
     if $ERROR_TEST ; then
         run_test_case $err
     fi
-    # execute test summary
-    test_summary
+    
+    test_summary $fld
+    if $ERROR_TEST ; then
+        # execute test summary
+        test_summary $err
+    fi
+ 
 
 
         
