@@ -50,12 +50,13 @@ run_test_case()
         ceph_status=$(oc get cephcluster | grep -Eo "HEALTH_OK")
         storage_status=$(oc get storagecluster | grep -Eo "Ready")
         if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
-            #skip UI test
-            str=$(echo "$TEST_CASE" | grep -Eo "/ui/")
-	        if [ $? -eq 0 ]
-            then
-                echo "Following failure is UI related and ignored"
-                continue
+            if ! $UI_TEST ; then
+                #skip UI test
+                str=$(echo "$TEST_CASE" | grep -Eo "/ui/")
+                if [ $? -eq 0 ]; then
+                    echo "Following failure is UI related and ignored"
+                    continue
+                fi
             else
                 #extract test name for log filename
                 LOG_FILE_NAME=$(awk -F '::' '{print $3}'<<<"$TEST_CASE")
