@@ -101,14 +101,13 @@ test_summary() {
             elif [[ $(tail -n 2 $logfile | grep -o failed) == "failed" ]]; then
                 tail -n 2 $logfile | grep -v -B 1 failed | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((FAIL++))
-
             else
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
                 stc=$(grep -i -F $keyword $logfile | tail -n 1)
                 echo "SKIPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((SKIP++))
             fi
-            
+        done
                 sum_str=$(grep "^= " $OVERALL_TEST_SUMMARY)
                 tf=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $2}')
                 tp=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $4}')
@@ -124,8 +123,6 @@ test_summary() {
                 sum_str=$(echo $sum_str | sed "s/\b$ts\b/$lts/g")
                 sum_str=$(echo $sum_str | sed "s/\b$te\b/$lte/g")
                 echo $sum_str >> $OVERALL_TEST_SUMMARY
-
-        done
         sed -i "1i =========================== short test summary info ============================" $OVERALL_TEST_SUMMARY
         echo "=======================$FAIL failed, $PASS passed, $SKIP skipped =========================" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
     # exit if logs directory not exist.
