@@ -92,27 +92,12 @@ test_summary() {
         
         # LOOP to fetch all log files in log dir
         for logfile in "$LOG_DIR"*.log; do
-        echo $logfile
             if [[ $(tail -n 2 $logfile | grep -o passed) == "passed" ]]; then
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
                 ptc=$(grep -i -F $keyword $logfile | tail -n 1)
                 echo "PASSED $ptc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((PASS++))
                 sed -i "\|^FAILED $ptc\$|d" $OVERALL_TEST_SUMMARY
-                sum_str=$(grep "^= " $OVERALL_TEST_SUMMARY)
-                tf=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $2}')
-                tp=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $4}')
-                te=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $12}')
-                ltf=$(($tf - $PASS))
-                ltp=$(($tp + $PASS))
-                lte=$(($te - $PASS))
-                sed -i "\|^$sum_str\$|d" $OVERALL_TEST_SUMMARY
-                sum_str=$(echo $sum_str | sed "s/\b$tf\b/$ltf/g")
-                sum_str=$(echo $sum_str | sed "s/\b$tp\b/$ltp/g")
-                sum_str=$(echo $sum_str | sed "s/\b$te\b/$lte/g")
-                echo $sum_str >> $OVERALL_TEST_SUMMARY
-
-
             elif [[ $(tail -n 2 $logfile | grep -o failed) == "failed" ]]; then
                 tail -n 2 $logfile | grep -v -B 1 failed | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((FAIL++))
@@ -123,6 +108,23 @@ test_summary() {
                 echo "SKIPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 ((SKIP++))
             fi
+            
+                sum_str=$(grep "^= " $OVERALL_TEST_SUMMARY)
+                tf=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $2}')
+                tp=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $4}')
+                ts=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $6}')
+                te=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $12}')
+                ltf=$(($tf - $PASS - $SKIP))
+                ltp=$(($tp + $PASS))
+                lts=$(($ts + $SKIP))
+                lte=$(($te - $PASS))
+                sed -i "\|^$sum_str\$|d" $OVERALL_TEST_SUMMARY
+                sum_str=$(echo $sum_str | sed "s/\b$tf\b/$ltf/g")
+                sum_str=$(echo $sum_str | sed "s/\b$tp\b/$ltp/g")
+                sum_str=$(echo $sum_str | sed "s/\b$ts\b/$lts/g")
+                sum_str=$(echo $sum_str | sed "s/\b$te\b/$lte/g")
+                echo $sum_str >> $OVERALL_TEST_SUMMARY
+
         done
         sed -i "1i =========================== short test summary info ============================" $OVERALL_TEST_SUMMARY
         echo "=======================$FAIL failed, $PASS passed, $SKIP skipped =========================" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
