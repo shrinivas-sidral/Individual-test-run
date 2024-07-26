@@ -12,7 +12,7 @@ fetch_data(){
     if ! $UI_TEST ; then
 
     str=$(echo "$T" | grep -Eo "/ui/")
-	if [ $str == "/ui/" ]
+	if [ $? -eq 0 ]
         then
             echo $T | sed "s/$1/SKIPPED/" | tee -a $BEFORE_TEST
             ((SKIPPED++))
@@ -46,8 +46,8 @@ run_test_case()
         storage_status=$(oc get storagecluster | grep -Eo "Ready")
 
         if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
-            str=$(echo "$TEST_CASE" | grep -Eo "/ui/")
-	        if [ $str == "/ui/" ]
+             str=$(echo "$T" | grep -Eo "/ui/")
+	        if [ $? -eq 0 ]
             then
                 echo "Following failure is UI related and ignored"
                 continue
