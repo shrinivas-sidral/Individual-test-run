@@ -122,7 +122,16 @@ test_summary() {
                 ((SKIP++))
             fi
         done
-                #fetch overall counts from overall test summary file
+              
+    # exit if logs directory not exist.
+    else
+        echo "$LOG_DIR does not exist."
+    fi
+}
+
+
+overall_summary(){
+      #fetch overall counts from overall test summary file
                 sum_str=$(grep "^= " $OVERALL_TEST_SUMMARY)
                 #extract the counts
                 tf=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $2}')
@@ -145,11 +154,8 @@ test_summary() {
                 echo $sum_str >> $OVERALL_TEST_SUMMARY
         sed -i "1i =========================== short test summary info ============================" $OVERALL_TEST_SUMMARY
         echo "=======================$FAIL failed, $PASS passed, $SKIP skipped =========================" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
-    # exit if logs directory not exist.
-    else
-        echo "$LOG_DIR does not exist."
-    fi
 }
+
 
 fld=FAILED
 #variabl used when ERROR test enables
@@ -194,4 +200,5 @@ fi
         # execute test summary for ERROR
         test_summary $err
     fi
- 
+    #overall summary call
+    overall_summary
