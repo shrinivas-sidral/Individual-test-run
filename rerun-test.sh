@@ -102,9 +102,15 @@ test_summary() {
                 echo "PASSED $ptc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 #pass count for summary
                 ((PASS++))
-                #delete passed test case from overall summary
-                escaped_pattern=$(echo "$temp $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
+              escaped_pattern=""
+                if [ $ERROR_TEST ]; then
+                    escaped_pattern=$(echo "ERROR $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
+               else
+                    #delete passed test case from overall summary
+                    escaped_pattern=$(echo "FAILED $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
+                fi
                 sed -i "/$escaped_pattern$/d" $OVERALL_TEST_SUMMARY
+                
             #check failed test cases
             elif [[ $(tail -n 2 $logfile | grep -o failed) == "failed" ]]; then
                 tail -n 2 $logfile | grep -v -B 1 failed | tee -a "$INDIVIDUAL_TEST_SUMMARY"
@@ -116,7 +122,13 @@ test_summary() {
                 stc=$(grep -i -F $keyword $logfile | tail -n 1)
                 echo "SKIPPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 #delete sipped test case from overall summary
-                escaped_pattern=$(echo "$temp $stc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
+                escaped_pattern=""
+                if [ $ERROR_TEST ]; then
+                    escaped_pattern=$(echo "ERROR $stc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
+               else
+                    #delete passed test case from overall summary
+                    escaped_pattern=$(echo "FAILED $stc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
+                fi
                 sed -i "/$escaped_pattern$/d" $OVERALL_TEST_SUMMARY
                 #skip count for overall summary
                 ((SKIP++))
