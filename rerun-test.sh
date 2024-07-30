@@ -206,11 +206,7 @@ fi
     if $ERROR_TEST ; then
         run_test_case $err
     fi
-    # execute test summary for FAILED 
-    test_summary $fld
-    if $ERROR_TEST ; then
-        # execute test summary for ERROR
-        test_summary $err
-    fi
+    # execute test summary 
+    test_summary
     #overall summary call
     overall_summary
