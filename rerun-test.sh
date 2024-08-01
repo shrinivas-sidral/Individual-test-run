@@ -47,22 +47,22 @@ run_test_case()
     #read test cases from file
     while IFS= read -r TEST_CASE; do
         #ceph health and storagecluster phase check
-        ceph_status=$(oc get cephcluster | grep -Eo "HEALTH_OK")
-        storage_status=$(oc get storagecluster | grep -Eo "Ready")
+        # ceph_status=$(oc get cephcluster | grep -Eo "HEALTH_OK")
+        # storage_status=$(oc get storagecluster | grep -Eo "Ready")
 
-           if [ "$ceph_status" != "HEALTH_OK" ]; then
-                echo "ceph health is not HEALTH_OK"
-                #execute ceph health script
-                bash $CEPH_HEALTH_SCRIPT
-                echo "sleep 5m"
-                sleep 5m
-            fi
-            if [ "$storage_status" != "Ready" ]; then
-                echo "storage cluster is not Ready."
-                echo "sleep 5m"
-                sleep 5m
-            fi
-        if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
+        #    if [ "$ceph_status" != "HEALTH_OK" ]; then
+        #         echo "ceph health is not HEALTH_OK"
+        #         #execute ceph health script
+        #         bash $CEPH_HEALTH_SCRIPT
+        #         echo "sleep 5m"
+        #         sleep 5m
+        #     fi
+        #     if [ "$storage_status" != "Ready" ]; then
+        #         echo "storage cluster is not Ready."
+        #         echo "sleep 5m"
+        #         sleep 5m
+        #     fi
+        # if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
 
             if ! $UI_TEST ; then
                 #skip UI test
@@ -86,7 +86,7 @@ run_test_case()
                 #run test cases
                 nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee "$LOG_DIR$LOG_FILE_NAME.log" 2>&1
             fi
-        fi
+        # fi
     done < <(cat < "$FILE_PATH$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
 }
 
@@ -103,10 +103,10 @@ test_summary() {
                 echo "PASSED $ptc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 #pass count for summary
                 ((PASS++))
-              escaped_pattern=""
+                escaped_pattern=""
                 if [ $ERROR_TEST ]; then
                     escaped_pattern=$(echo "ERROR $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
-               else
+                else
                     #delete passed test case from overall summary
                     escaped_pattern=$(echo "FAILED $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
                 fi
@@ -117,6 +117,12 @@ test_summary() {
                 tail -n 2 $logfile | grep -v -B 1 failed | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 #fail count for summary
                 ((FAIL++))
+
+            elif [[ $(tail -n 2 $logfile | grep -o error) == "error" ]]; then
+                tail -n 2 $logfile | grep -v -B 1 error | tee -a "$INDIVIDUAL_TEST_SUMMARY"
+                #fail count for summary
+                ((ERR++))
+
             #if not pass or fail found then considered as skipped test
             else
                 keyword=$(echo "$logfile" | awk -F "/" '{print $NF}' | awk -F "." '{print $1}')
@@ -166,7 +172,7 @@ overall_summary(){
                 #add the counts line
                 echo $sum_str >> $OVERALL_TEST_SUMMARY
         sed -i "1i =========================== short test summary info ============================" $OVERALL_TEST_SUMMARY
-        echo "=======================$FAIL failed, $PASS passed, $SKIP skipped =========================" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
+        echo "=======================$FAIL failed, $PASS passed, $SKIP skipped, $ERR errors=========================" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
 }
 
 
