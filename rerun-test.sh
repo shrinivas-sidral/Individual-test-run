@@ -49,7 +49,21 @@ run_test_case()
         #ceph health and storagecluster phase check
         ceph_status=$(oc get cephcluster | grep -Eo "HEALTH_OK")
         storage_status=$(oc get storagecluster | grep -Eo "Ready")
+
+           if [ "$ceph_status" != "HEALTH_OK" ]; then
+                echo "ceph health is not HEALTH_OK"
+                #execute ceph health script
+                bash $CEPH_HEALTH_SCRIPT
+                echo "sleep 5m"
+                sleep 5m
+            fi
+            if [ "$storage_status" != "Ready" ]; then
+                echo "storage cluster is not Ready."
+                echo "sleep 5m"
+                sleep 5m
+            fi
         if [ "$ceph_status" == "HEALTH_OK" ] && [ "$storage_status" == "Ready" ]; then
+
             if ! $UI_TEST ; then
                 #skip UI test
                 str=$(echo "$TEST_CASE" | grep -Eo "/ui/")
@@ -71,19 +85,6 @@ run_test_case()
                 cd ~/ocs-upi-kvm/src/ocs-ci/
                 #run test cases
                 nohup run-ci -m "tier$TIER_NO" --ocs-version $OCS_VERSION --ocsci-conf=conf/ocsci/production_powervs_upi.yaml --ocsci-conf conf/ocsci/lso_enable_rotational_disks.yaml --ocsci-conf /root/ocs-ci-conf.yaml --cluster-name "ocstest" --cluster-path /root/ --collect-logs "$TEST_CASE" | tee "$LOG_DIR$LOG_FILE_NAME.log" 2>&1
-            fi
-        else
-            if [ "$ceph_status" != "HEALTH_OK" ]; then
-                echo "ceph health is not HEALTH_OK"
-                #execute ceph health script
-                bash $CEPH_HEALTH_SCRIPT
-                echo "sleep 5m"
-                sleep 5m
-            fi
-            if [ "$storage_status" != "Ready" ]; then
-                echo "storage cluster is not Ready."
-                echo "sleep 5m"
-                sleep 5m
             fi
         fi
     done < <(cat < "$FILE_PATH$FILENAME" | grep "^$1[[:space:]]\+" | awk '{print $2}' | sort | uniq)
