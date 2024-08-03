@@ -158,10 +158,10 @@ overall_summary(){
                 ts=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $6}')
                 te=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $12}')
                 #calculate the counts
-                ltf=$(($tf - $PASS - $SKIP - $SKIPPED))
+                ltf=$(($tf + $te - $PASS - $SKIP - $SKIPPED - $ERR))
                 ltp=$(($tp + $PASS))
                 lts=$(($ts + $SKIP + $SKIPPED))
-                lte=$(($te - $PASS))
+		        lte=$(($tf + $tp + $ts + $te - $ltf - $ltp - $lts))
                 #delete the tier test counts from overall test summray file
                 sed -i "\|^$sum_str\$|d" $OVERALL_TEST_SUMMARY
                 #modify the counts
