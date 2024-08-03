@@ -104,7 +104,7 @@ test_summary() {
                 #pass count for summary
                 ((PASS++))
                 escaped_pattern=""
-                
+
                 if [ $ERROR_TEST ]; then
                     escaped_pattern_err=$(echo "ERROR $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
                     sed -i "/$escaped_pattern_err$/d" $OVERALL_TEST_SUMMARY
@@ -159,10 +159,18 @@ overall_summary(){
                 ts=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $6}')
                 te=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $12}')
                 #calculate the counts
+                if [ $ERROR_TEST ]; then
                 ltf=$(($tf + $te - $PASS - $SKIP - $SKIPPED - $ERR))
                 ltp=$(($tp + $PASS))
                 lts=$(($ts + $SKIP + $SKIPPED))
 		        lte=$(($tf + $tp + $ts + $te - $ltf - $ltp - $lts))
+                else
+                ltf=$(($tf - $PASS - $SKIP - $SKIPPED))
+                ltp=$(($tp + $PASS))
+                lts=$(($ts + $SKIP + $SKIPPED))
+                lte=$(($te + $ERR))
+                fi
+
                 #delete the tier test counts from overall test summray file
                 sed -i "\|^$sum_str\$|d" $OVERALL_TEST_SUMMARY
                 #modify the counts
