@@ -105,7 +105,7 @@ test_summary() {
                 ((PASS++))
                 escaped_pattern=""
 
-                if [ $ERROR_TEST ]; then
+                if $ERROR_TEST ; then
                     escaped_pattern_err=$(echo "ERROR $ptc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
                     sed -i "/$escaped_pattern_err$/d" $OVERALL_TEST_SUMMARY
                 fi
@@ -131,7 +131,7 @@ test_summary() {
                 echo "SKIPPED $stc" | tee -a "$INDIVIDUAL_TEST_SUMMARY"
                 #delete skipped test case from overall summary
                 escaped_pattern=""
-                if [ $ERROR_TEST ]; then
+                if $ERROR_TEST ; then
                     escaped_pattern_err=$(echo "ERROR $stc" | sed 's/[[]/\\[/g; s/[]]/\\]/g; s/\//\\\//g')
                     sed -i "/$escaped_pattern_err$/d" $OVERALL_TEST_SUMMARY
                 fi
@@ -159,7 +159,7 @@ overall_summary(){
                 ts=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $6}')
                 te=$(grep "^= " $OVERALL_TEST_SUMMARY | awk '{print $12}')
                 #calculate the counts
-                if [ $ERROR_TEST ]; then
+                if $ERROR_TEST ; then
                 ltf=$(($tf + $te - $PASS - $SKIP - $SKIPPED - $ERR))
                 ltp=$(($tp + $PASS))
                 lts=$(($ts + $SKIP + $SKIPPED))
