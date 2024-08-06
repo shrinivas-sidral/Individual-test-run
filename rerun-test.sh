@@ -72,7 +72,7 @@ run_test_case()
                     continue
                 else
                 #extract test name for log filename
-                LOG_FILE_NAME=$(awk -F '::' '{print $3}'<<<"$TEST_CASE")
+                LOG_FILE_NAME=$(awk -F '::' '{print $NF}'<<<"$TEST_CASE")
                 #change directory
                 cd ~/ocs-upi-kvm/src/ocs-ci/
                 #run test cases
@@ -80,7 +80,7 @@ run_test_case()
                 fi
             else
                 #extract test name for log filename
-                LOG_FILE_NAME=$(awk -F '::' '{print $3}'<<<"$TEST_CASE")
+                LOG_FILE_NAME=$(awk -F '::' '{print $NF}'<<<"$TEST_CASE")
                 #change directory
                 cd ~/ocs-upi-kvm/src/ocs-ci/
                 #run test cases
